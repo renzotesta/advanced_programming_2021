@@ -54,11 +54,11 @@ class stack_pool {
     node_t &node(stack_type x) noexcept { return pool[x - 1]; }
     const node_t &node(stack_type x) const noexcept { return pool[x - 1]; }
     
-    
-    stack_type head_to_freenode(T&& val, stack_type head) {	/// cannot be noexcept: the auto = acquire resources
+    template<typename Q>
+    stack_type head_to_freenode(Q&& val, stack_type head) {	/// cannot be noexcept: the auto = acquire resources
     	auto tmp = head;
     	head = free_nodes;
-    	value(head) = std::forward<T>(val);
+    	value(head) = std::forward<Q>(val);
     	next(head) = tmp;
     	free_nodes = next(free_nodes);
     	return head;
@@ -76,16 +76,16 @@ class stack_pool {
     }
     
 public:
-    stack_pool(): free_nodes {stack_type(0)} {}
+    stack_pool() noexcept : pool{0}; free_nodes {stack_type{0}} {}
     explicit stack_pool(size_type n) { // reserve n nodes in the pool
         reserve(n);
-        free_nodes = stack_type(0); // or maybe is better to use free_nodes = end(); ?
+        free_nodes = stack_type{0}; 
     }
     
 
 
     using iterator = _iterator<stack_pool, value_type, stack_type>;
-    using const_iterator = _iterator<stack_pool, const value_type, stack_type>;
+    using const_iterator = _iterator<const stack_pool, const value_type, stack_type>;
 
     iterator begin(stack_type x) noexcept { return iterator(x, *this); };
     iterator end(stack_type) noexcept{ return iterator(end(), *this); }; // this is not a typo
@@ -102,7 +102,7 @@ public:
         return end();
     }
 
-    void reserve(size_type n) { // reserve n nodes in the pool /// cannot be noexcept: acquires resources 
+    void reserve(const size_type n) { // reserve n nodes in the pool /// cannot be noexcept: acquires resources 
         pool.reserve(n);
     }
 
@@ -110,34 +110,32 @@ public:
         return pool.capacity();
     }
 
-    bool empty(stack_type x) const {
+    bool empty(const stack_type x) const noexcept {
         return x == end();
     }
 
     stack_type end() const noexcept { return stack_type(0); }
 
-    T &value(stack_type x) {					/// cannot be noexcept: allows to set value: it could be of wrong type
+    T &value(const stack_type x) noexcept {					/// cannot be noexcept: allows to set value: it could be of wrong type
         return node(x).value;
     }
-    const T &value(stack_type x) const noexcept {
+    const T &value(const stack_type x) const noexcept {
         return node(x).value;
     }
 
-    stack_type &next(stack_type x) {				/// cannot be noexcept: allows to set next: it could be of wrong type
+    stack_type &next(const stack_type x) noexcept {				/// cannot be noexcept: allows to set next: it could be of wrong type
         return node(x).next;
     }
-    const stack_type &next(stack_type x) const noexcept {
+    const stack_type &next(const stack_type x) const noexcept {
         return node(x).next;
     }
     
     stack_type push(const T &val, stack_type head) {		/// cannot be noexcept because uses a fucntion that is not noexcept
-	stack_type h = _push(val, head);
-        return h;
+	return _push(val, head);
     }
 
     stack_type push(T &&val, stack_type head) {		/// cannot be noexcept because uses a fucntion that is not noexcept
-	stack_type h = _push(std::forward<T>(val), head);
-        return h;
+	return _push(std::forward<T>(val), head);
     }
 
     stack_type pop(stack_type x) { // delete first node	/// cannot be noexcept because auto = acquires resources
@@ -149,9 +147,8 @@ public:
     }
 
     stack_type free_stack(stack_type x) { // free entire stack
-        if (not empty(x))
-            while ( x != end() )
-                x = pop(x);
+        while ( x != end() )
+            x = pop(x);
         return x;
     }
 };
