@@ -42,7 +42,7 @@ class stack_pool {
         T value;
         N next;
 
-        node_t(const T &v, N &n) : value{v}, next{n} {}
+        node_t(const T &v,const N &n) : value{v}, next{n} {}
     };
 
     std::vector<node_t> pool;
