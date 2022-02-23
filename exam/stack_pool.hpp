@@ -54,6 +54,7 @@ class stack_pool {
     node_t &node(stack_type x) noexcept { return pool[x - 1]; }
     const node_t &node(stack_type x) const noexcept { return pool[x - 1]; }
     
+    
     stack_type head_to_freenode(T&& val, stack_type head) {	/// cannot be noexcept: the auto = acquire resources
     	auto tmp = head;
     	head = free_nodes;
@@ -75,10 +76,7 @@ class stack_pool {
     }
     
 public:
-    stack_pool() {
-        reserve(1024);
-        free_nodes = stack_type(0); // or maybe is better to use free_nodes = end(); ?
-    }
+    stack_pool(): free_nodes {stack_type(0)} {}
     explicit stack_pool(size_type n) { // reserve n nodes in the pool
         reserve(n);
         free_nodes = stack_type(0); // or maybe is better to use free_nodes = end(); ?
@@ -89,14 +87,14 @@ public:
     using iterator = _iterator<stack_pool, value_type, stack_type>;
     using const_iterator = _iterator<stack_pool, const value_type, stack_type>;
 
-    iterator begin(stack_type x) { return iterator(x, *this); };
-    iterator end(stack_type) { return iterator(end(), *this); }; // this is not a typo
+    iterator begin(stack_type x) noexcept { return iterator(x, *this); };
+    iterator end(stack_type) noexcept{ return iterator(end(), *this); }; // this is not a typo
 
-    const_iterator begin(stack_type x) const { return const_iterator(x, *this); }
-    const_iterator end(stack_type) const { return const_iterator(end(), *this); }
+    const_iterator begin(stack_type x) const noexcept { return const_iterator(x, *this); }
+    const_iterator end(stack_type) const noexcept{ return const_iterator(end(), *this); }
 
-    const_iterator cbegin(stack_type x) const { return const_iterator(x, *this); }
-    const_iterator cend(stack_type) const { return const_iterator(end(), *this); }
+    const_iterator cbegin(stack_type x) const noexcept { return const_iterator(x, *this); }
+    const_iterator cend(stack_type) const noexcept { return const_iterator(end(), *this); }
 
 
 
