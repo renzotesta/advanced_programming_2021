@@ -53,18 +53,17 @@ class stack_pool {
     node_t &node(stack_type x) noexcept { return pool[x - 1]; }
     const node_t &node(stack_type x) const noexcept { return pool[x - 1]; }
     
-    stack_type head_to_freenode(stack_type head) {
-    	auto tmp = head;
-    	head = free_nodes;
-    	next(head) = tmp;
-    	free_nodes = next(free_nodes);
-    	return head;
+    void movenode_from_to(stack_type& from, stack_type& to) {
+    	auto tmp = to;
+    	to = from;
+    	next(to) = tmp;
+    	from = next(from);
     }
     
     template<typename V>
     stack_type _push(V&& val, stack_type head) {
     	if (free_nodes != end() ){
-    	    head = head_to_freenode(head);
+    	    movenode_from_to(free_nodes, head);
     	    value(head) = std::forward<V>(val);
     	} else {
     	    pool.push_back(node_t{std::forward<V>(val), head});
@@ -135,12 +134,9 @@ public:
     stack_type push(T &&val, stack_type head) {		
 	return _push(std::forward<T>(val), head);
     }
-
+    
     stack_type pop(stack_type x) { // delete first node	
-        auto tmp = free_nodes;
-        free_nodes = x;
-        x = next(x);
-        next(free_nodes) = tmp;
+        movenode_from_to(x, free_nodes);
         return x;
     }
 
