@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <memory>
 #include <vector>
 
 template <typename stack_pool, typename T, typename N = std::size_t>
@@ -22,7 +21,7 @@ public:
     reference operator*() const {
         return pool->value(current_stack);
     }
-    _iterator &operator++() { 			// pre-increment
+    _iterator &operator++() { 			
         current_stack = pool->next(current_stack);
         return *this;
     }
@@ -48,7 +47,7 @@ class stack_pool {
     using stack_type = N;
     using value_type = T;
     using size_type = typename std::vector<node_t>::size_type;
-    stack_type free_nodes; // at the beginning, it is empty
+    stack_type free_nodes;
 
     node_t &node(stack_type x) noexcept { return pool[x - 1]; }
     const node_t &node(stack_type x) const noexcept { return pool[x - 1]; }
@@ -74,9 +73,8 @@ class stack_pool {
     
 public:
     stack_pool() noexcept : pool{0}, free_nodes {stack_type{0}} {}
-    explicit stack_pool(size_type n) { // reserve n nodes in the pool
-        reserve(n);
-        free_nodes = stack_type{0}; 
+    explicit stack_pool(size_type n): pool{0}, free_nodes {stack_type{0}} {
+        reserve(n); 
     }
     
 
@@ -85,7 +83,7 @@ public:
     using const_iterator = _iterator<const stack_pool, const value_type, stack_type>;
 
     iterator begin(stack_type x) noexcept { return iterator(x, *this); };
-    iterator end(stack_type) noexcept{ return iterator(end(), *this); }; // this is not a typo
+    iterator end(stack_type) noexcept{ return iterator(end(), *this); };
 
     const_iterator begin(stack_type x) const noexcept { return const_iterator(x, *this); }
     const_iterator end(stack_type) const noexcept{ return const_iterator(end(), *this); }
@@ -95,15 +93,15 @@ public:
 
 
 
-    stack_type new_stack() noexcept { // return an empty stack
+    stack_type new_stack() noexcept {
         return end();
     }
 
-    void reserve(const size_type n) { // reserve n nodes in the pool 
+    void reserve(const size_type n) { 
         pool.reserve(n);
     }
 
-    size_type capacity() const noexcept { // the capacity of the pool
+    size_type capacity() const noexcept {
         return pool.capacity();
     }
 
@@ -135,15 +133,16 @@ public:
 	return _push(std::forward<T>(val), head);
     }
     
-    stack_type pop(stack_type x) { // delete first node	
+    stack_type pop(stack_type x) {	
         movenode_from_to(x, free_nodes);
         return x;
     }
 
-    stack_type free_stack(stack_type x) { // free entire stack
+    stack_type free_stack(stack_type x) noexcept {
         while ( x != end() )
             x = pop(x);
-        return x;
+       return x;
     }
+  
 };
 
